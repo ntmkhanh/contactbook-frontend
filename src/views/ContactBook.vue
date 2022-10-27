@@ -58,9 +58,11 @@ import { contactService } from '@/services/contact.service';
 
 export default {
     components: {
-        ContactCard, InputSearch, ContactList,
+        ContactCard,
+        InputSearch,
+        ContactList,
     },
-    // The full code will be presented below
+    //The full code will be presented below
     data() {
         return {
             contacts: [],
@@ -69,74 +71,68 @@ export default {
         };
     },
     watch: {
-        // Monitor changes on searchText.
-        // Release the currently selected contact. 
+        // Monitor changes on searchText
+        // Release the currently selected contact
         searchText() {
             this.activeIndex = -1;
         },
     },
-
     computed: {
-        // Map contacts to strings for searching. 
+        // Map contacts to strings for searching.
         contactsAsStrings() {
             return this.contacts.map((contact) => {
-                const { name, email, address, phone } = contact; return [name, email, address, phone].join('');
+                const { name, email, address, phone } = contact;
+                return [name, email, address, phone].join('');
             });
         },
-
-        // Return contacts filtered by the search box. 
+        // Return contacts filtered by the search box.
         filteredContacts() {
             if (!this.searchText) return this.contacts;
-            return this.contacts.filter((contact, index) =>
+                return this.contacts.filter((contact, index) =>
                 this.contactsAsStrings[index].includes(this.searchText)
             );
         },
-
         activeContact() {
             if (this.activeIndex < 0) return null;
-            return this.filteredContacts[this.activeIndex];
-        },
-
+                return this.filteredContacts[this.activeIndex];
+            },
         filteredContactsCount() {
             return this.filteredContacts.length;
         },
-
-        methods: {
-            async retrieveContacts() {
+    },
+    methods: {
+        async retrieveContacts() {
+            try {
+                const contactsList = await contactService.getMany();
+                this.contacts = contactsList.sort((current, next) =>
+                current.name.localeCompare(next.name)
+            );
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        refreshList() {
+            this.retrieveContacts();
+            this.activeIndex = -1;
+        },
+        async onDeleteContacts() {
+            if (confirm('Bạn muốn xóa tất cả Liên hệ?')) {
                 try {
-                    const contactsList = await contactService.getMany(); this.contacts = contactsList.sort((current, next) =>
-                        current.name.localeCompare(next.name)
-                    );
+                    await contactService.deleteMany();
+                    this.refreshList();
                 } catch (error) {
                     console.log(error);
                 }
-            },
-
-            refreshList() {
-                this.retrieveContacts();
-                this.activeIndex = -1;
-            },
-
-            async onDeleteContacts() {
-                if (confirm('Bạn muốn xóa tất cả Liên hệ?')) {
-                    try {
-                        await contactService.deleteMany(); this.refreshList();
-                    } catch (error) {
-                        console.log(error);
-                    }
-                }
-            },
-
-
-            goToAddContact() {
-                this.$router.push({ name: 'contact.add' });
-            },
+            }
         },
-        mounted() {
-            this.refreshList();
+        goToAddContact() {
+            this.$router.push({ name: 'contact.add' });
         },
-    }
-}
+    },
+    mounted() {
+        this.refreshList();
+    },
+};
 </script>
 
 
