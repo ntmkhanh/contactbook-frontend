@@ -18,6 +18,7 @@
             <div class="mt-3 row justify-content-around align-items-center">
                 <button class="btn btn-sm btn-primary" @click="refreshList()">
                     <i class="fas fa-redo" /> Làm mới
+
                 </button>
                 <button class="btn btn-sm btn-success" @click="goToAddContact">
                     <i class="fas fa-plus" /> Thêm mới
@@ -36,6 +37,13 @@
                     <i class="fas fa-address-card" />
                 </h4>
                 <ContactCard :contact="activeContact" />
+                <router-link :to="{
+                    name: 'contact.edit',
+                    params: { id: activeContact.id },
+                }">
+                    <span class="mt-2 badge badge-warning">
+                        <i class="fas fa-edit" /> Hiệu chỉnh</span>
+                </router-link>
             </div>
         </div>
     </div>
@@ -43,9 +51,9 @@
 
 
 <script>
-import ContactCard from '@/components/ContactCard.vue'; 
-import InputSearch from '@/components/InputSearch.vue'; 
-import ContactList from '@/components/ContactList.vue'; 
+import ContactCard from '@/components/ContactCard.vue';
+import InputSearch from '@/components/InputSearch.vue';
+import ContactList from '@/components/ContactList.vue';
 import { contactService } from '@/services/contact.service';
 
 export default {
@@ -55,8 +63,8 @@ export default {
     // The full code will be presented below
     data() {
         return {
-            contacts: [], 
-            activeIndex: -1, 
+            contacts: [],
+            activeIndex: -1,
             searchText: '',
         };
     },
@@ -65,69 +73,69 @@ export default {
         // Release the currently selected contact. 
         searchText() {
             this.activeIndex = -1;
+        },
     },
-},
 
     computed: {
-    // Map contacts to strings for searching. 
-    contactsAsStrings() {
-        return this.contacts.map((contact) => {
-            const { name, email, address, phone } = contact; return [name, email, address, phone].join('');
-    });
-},
-
-// Return contacts filtered by the search box. 
-    filteredContacts() {
-        if (!this.searchText) return this.contacts; 
-        return this.contacts.filter((contact, index) =>
-            this.contactsAsStrings[index].includes(this.searchText)
-);
-},
-
-    activeContact() {
-        if (this.activeIndex < 0) return null;
-        return this.filteredContacts[this.activeIndex];
-},
-
-    filteredContactsCount() {
-        return this.filteredContacts.length;
-},
-
-methods: {
-    async retrieveContacts() {
-            try {
-                const contactsList = await contactService.getMany(); this.contacts = contactsList.sort((current, next) =>
-                    current.name.localeCompare(next.name)
-                );
-            } catch (error) {
-                console.log(error);
-            }
+        // Map contacts to strings for searching. 
+        contactsAsStrings() {
+            return this.contacts.map((contact) => {
+                const { name, email, address, phone } = contact; return [name, email, address, phone].join('');
+            });
         },
 
-    refreshList() {
-        this.retrieveContacts(); 
-        this.activeIndex = -1;
-    },
+        // Return contacts filtered by the search box. 
+        filteredContacts() {
+            if (!this.searchText) return this.contacts;
+            return this.contacts.filter((contact, index) =>
+                this.contactsAsStrings[index].includes(this.searchText)
+            );
+        },
 
-    async onDeleteContacts() {
-            if (confirm('Bạn muốn xóa tất cả Liên hệ?')) {
+        activeContact() {
+            if (this.activeIndex < 0) return null;
+            return this.filteredContacts[this.activeIndex];
+        },
+
+        filteredContactsCount() {
+            return this.filteredContacts.length;
+        },
+
+        methods: {
+            async retrieveContacts() {
                 try {
-                    await contactService.deleteMany(); this.refreshList();
+                    const contactsList = await contactService.getMany(); this.contacts = contactsList.sort((current, next) =>
+                        current.name.localeCompare(next.name)
+                    );
                 } catch (error) {
                     console.log(error);
                 }
-            }
+            },
+
+            refreshList() {
+                this.retrieveContacts();
+                this.activeIndex = -1;
+            },
+
+            async onDeleteContacts() {
+                if (confirm('Bạn muốn xóa tất cả Liên hệ?')) {
+                    try {
+                        await contactService.deleteMany(); this.refreshList();
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            },
+
+
+            goToAddContact() {
+                this.$router.push({ name: 'contact.add' });
+            },
         },
-
-
-    goToAddContact() {
-        this.$router.push({ name: 'contact.add' });
-    },
-},
-mounted() {
-    this.refreshList();
-    },
-}
+        mounted() {
+            this.refreshList();
+        },
+    }
 }
 </script>
 
